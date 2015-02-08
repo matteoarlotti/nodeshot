@@ -470,3 +470,22 @@ class NodesApiTest(BaseTestCase):
         response = self.client.patch(url, {'name': 'external 2'})
         self.assertEqual(response.status_code, 403)
         self.client.logout()
+
+    def test_node_integrity_error(self):
+        self.client.login(username='admin', password='tester')
+        url = reverse('api_node_list')
+        existing = Node.objects.get(slug='pomezia')
+        existing.name = 'changed'
+        existing.save()
+        json_data = json.dumps({
+            "name": "Pomezia",
+            "slug": "",
+            "layer": "rome",
+            "geometry": {"type": "Point", "coordinates": [12.50094473361969, 41.66767450196442]},
+            "elev": 0,
+            "address": "",
+            "description": ""
+        })
+        response = self.client.post(url, json_data, content_type='application/json')
+        print response.content
+        self.assertEqual(response.status_code, 400)
